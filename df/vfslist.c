@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 1991, 1993
+ * Copyright (c) 1995
  *	The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,37 +29,70 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- *	from: @(#)extern.h	8.1 (Berkeley) 5/31/93
- * $FreeBSD: src/bin/ls/extern.h,v 1.19 2002/05/19 02:51:36 tjr Exp $
  */
 
-int	 acccmp(const FTSENT *, const FTSENT *);
-int	 revacccmp(const FTSENT *, const FTSENT *);
-int	 modcmp(const FTSENT *, const FTSENT *);
-int	 revmodcmp(const FTSENT *, const FTSENT *);
-int	 namecmp(const FTSENT *, const FTSENT *);
-int	 revnamecmp(const FTSENT *, const FTSENT *);
-int	 statcmp(const FTSENT *, const FTSENT *);
-int	 revstatcmp(const FTSENT *, const FTSENT *);
-int	 sizecmp (const FTSENT *, const FTSENT *);
-int	 revsizecmp (const FTSENT *, const FTSENT *);
-
-void	 printcol(DISPLAY *);
-void	 printlong(DISPLAY *);
-void	 printscol(DISPLAY *);
-void	 printstream(DISPLAY *);
-void	 usage(void);
-size_t	 len_octal(const char *, int);
-int	 prn_octal(const char *);
-int	 prn_printable(const char *);
-#ifdef COLORLS
-void	 parsecolors(const char *cs);
-void     colorquit(int);
-
-extern  char    *ansi_fgcol;
-extern  char    *ansi_bgcol;
-extern  char    *ansi_coloff;
-extern  char    *attrs_off;
-extern  char    *enter_bold;
+#ifndef lint
+#if 0
+static char sccsid[] = "@(#)vfslist.c	8.1 (Berkeley) 5/8/95";
 #endif
+static const char rcsid[] =
+  "$FreeBSD: src/sbin/mount/vfslist.c,v 1.4 1999/08/28 00:13:27 peter Exp $";
+#endif /* not lint */
+
+#include <err.h>
+#include <stdlib.h>
+#include <string.h>
+
+#ifndef __APPLE__
+#include "extern.h"
+#endif
+
+static int	  skipvfs;
+
+int
+checkvfsname(vfsname, vfslist)
+	const char *vfsname;
+	const char **vfslist;
+{
+
+	if (vfslist == NULL)
+		return (0);
+	while (*vfslist != NULL) {
+		if (strcmp(vfsname, *vfslist) == 0)
+			return (skipvfs);
+		++vfslist;
+	}
+	return (!skipvfs);
+}
+
+const char **
+makevfslist(fslist)
+	char *fslist;
+{
+	const char **av;
+	int i;
+	char *nextcp;
+
+	if (fslist == NULL)
+		return (NULL);
+	if (fslist[0] == 'n' && fslist[1] == 'o') {
+		fslist += 2;
+		skipvfs = 1;
+	}
+	for (i = 0, nextcp = fslist; *nextcp; nextcp++)
+		if (*nextcp == ',')
+			i++;
+	if ((av = malloc((size_t)(i + 2) * sizeof(char *))) == NULL) {
+		warnx("malloc failed");
+		return (NULL);
+	}
+	nextcp = fslist;
+	i = 0;
+	av[i++] = nextcp;
+	while ((nextcp = strchr(nextcp, ',')) != NULL) {
+		*nextcp++ = '\0';
+		av[i++] = nextcp;
+	}
+	av[i++] = NULL;
+	return (av);
+}
