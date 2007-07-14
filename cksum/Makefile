@@ -7,15 +7,18 @@
 # and Makefile.postamble (both optional), and Makefile will include them.
 #
 
-NAME = tcopy
+NAME = cksum
 
 PROJECTVERSION = 2.8
 PROJECT_TYPE = Tool
 
-CFILES = tcopy.c
+HFILES = extern.h
 
-OTHERSRCS = Makefile Makefile.preamble Makefile.postamble tcopy.1
+CFILES = cksum.c crc.c print.c sum1.c sum2.c crc32.c
 
+OTHERSRCS = Makefile Makefile.preamble Makefile.postamble cksum.1
+
+OTHER_CFLAGS=-D__FBSDID=__RCSID
 
 MAKEFILEDIR = $(MAKEFILEPATH)/pb_makefiles
 CODE_GEN_STYLE = DYNAMIC
@@ -28,14 +31,14 @@ PROF_LIBS = $(LIBS)
 
 
 
-NEXTSTEP_BUILD_OUTPUT_DIR = /tmp/developer_cmds/Build
+NEXTSTEP_BUILD_OUTPUT_DIR = /tmp/doc_cmds/Build
 
 NEXTSTEP_OBJCPLUS_COMPILER = /usr/bin/cc
 WINDOWS_OBJCPLUS_COMPILER = $(DEVDIR)/gcc
 PDO_UNIX_OBJCPLUS_COMPILER = $(NEXTDEV_BIN)/gcc
 NEXTSTEP_JAVA_COMPILER = /usr/bin/javac
 WINDOWS_JAVA_COMPILER = $(JDKBINDIR)/javac.exe
-PDO_UNIX_JAVA_COMPILER = $(NEXTDEV_BIN)/javac
+PDO_UNIX_JAVA_COMPILER = $(JDKBINDIR)/javac
 
 include $(MAKEFILEDIR)/platform.make
 
