@@ -62,6 +62,7 @@
 			<key>WorkingDirectory</key>
 			<string>/AppleInternal/Tests/file_cmds</string>
 		</dict>
+#if TARGET_OS_OSX
 		<dict>
 			<key>Command</key>
 			<array>
@@ -80,6 +81,7 @@
 			<key>WorkingDirectory</key>
 			<string>/AppleInternal/Tests/file_cmds</string>
 		</dict>
+#endif /* TARGET_OS_OSX */
 		<dict>
 			<key>Command</key>
 			<array>
