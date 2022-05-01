@@ -108,6 +108,9 @@ Be verbose when deleting files, showing them as they are removed.
 Attempt to undelete the named files.
 Currently, this option can only be used to recover
 files covered by whiteouts.
+.It Fl t
+Move files to the Trash folder rather than delete them. When this flag
+is set the -P, -i flags will be ignored. TODO: Check this.
 .El
 .Pp
 The
@@ -139,6 +142,13 @@ removed.
 If an error occurs,
 .Nm
 exits with a value >0.
+.Sh ENVIRONMENT
+The following environment variables affect the execution of
+.Nm :
+.Bl -tag -width ".Ev RM_USE_TRASH"
+.It Ev RM_USE_TRASH
+Setting this variable is equivalent to passing -t to the command.
+.El
 .Sh NOTE
 The
 .Nm

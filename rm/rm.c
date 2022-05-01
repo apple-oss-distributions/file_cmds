@@ -67,6 +67,7 @@ __used static const char rcsid[] =
 #include <pwd.h>
 #include <grp.h>
 #include "get_compat.h"
+#include "rm_trash.h"
 
 #ifndef AT_REMOVEDIR_DATALESS
 #define AT_REMOVEDIR_DATALESS   0x0100  /* Remove a dataless directory without materializing first */
@@ -75,7 +76,7 @@ __used static const char rcsid[] =
 #define COMPAT_MODE(func, mode) 1
 #endif
 
-int dflag, eval, fflag, iflag, Pflag, vflag, Wflag, stdin_ok;
+int dflag, eval, fflag, iflag, Pflag, vflag, Wflag, tflag, stdin_ok;
 uid_t uid;
 
 int	check __P((char *, char *, struct stat *));
@@ -124,7 +125,7 @@ main(argc, argv)
 	}
 
 	Pflag = rflag = 0;
-	while ((ch = getopt(argc, argv, "dfiPRrvW")) != -1)
+	while ((ch = getopt(argc, argv, "dfiPRrvWt")) != -1)
 		switch(ch) {
 		case 'd':
 			dflag = 1;
@@ -150,6 +151,9 @@ main(argc, argv)
 		case 'W':
 			Wflag = 1;
 			break;
+		case 't':
+			tflag = 1;
+			break;
 		default:
 			usage();
 		}
@@ -162,15 +166,22 @@ main(argc, argv)
 		usage();
 	}
 
+	tflag |= !!getenv("RM_USE_TRASH");
+
 	checkdot(argv);
 
 	if (*argv) {
 		stdin_ok = isatty(STDIN_FILENO);
 
-		if (rflag)
-			rm_tree(argv);
-		else
+		if (rflag) {
+			if (tflag)
+				eval = rm_tree_trash(argv);
+			else
+				rm_tree(argv);
+		}
+		else {
 			rm_file(argv);
+		}
 	}
 
 	exit (eval);
@@ -415,11 +426,15 @@ rm_file(argv)
 				rval = rmdir(f);
 			else {
 #ifdef __APPLE__
-				if (Pflag) {
-					if (removefile(f, NULL, REMOVEFILE_SECURE_7_PASS)) /* overwrites and unlinks */
-						eval = rval = 1;
-				} else
-					rval = unlink(f);
+				if (tflag) {
+					eval = rval = removefileToTrash(f);
+				} else {
+					if (Pflag) {
+						if (removefile(f, NULL, REMOVEFILE_SECURE_7_PASS)) /* overwrites and unlinks */
+							eval = rval = 1;
+					} else
+						rval = unlink(f);
+				}
 #else  /* !__APPLE__ */
 				if (Pflag)
 					rm_overwrite(f, &sb);
@@ -616,7 +631,7 @@ usage()
 {
 
 	(void)fprintf(stderr, "%s\n%s\n",
-	    "usage: rm [-f | -i] [-dPRrvW] file ...",
+	    "usage: rm [-f | -i] [-dPRrvWt] file ...",
 	    "       unlink file");
 	exit(EX_USAGE);
 }

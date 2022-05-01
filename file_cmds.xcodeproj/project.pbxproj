@@ -215,6 +215,7 @@
 		3E59B9311D4A767600D3128C /* futimens.c in Sources */ = {isa = PBXBuildFile; fileRef = 3E59B9301D4A767600D3128C /* futimens.c */; };
 		3E966CEE1FB2216F0019F7A1 /* file_cmds.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3E966CEC1FB2214F0019F7A1 /* file_cmds.plist */; };
 		3E966CF01FB2218A0019F7A1 /* chgrp.sh in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3E966CEB1FB2214F0019F7A1 /* chgrp.sh */; };
+		6CB57AC8281E2AAE00E83F48 /* rm_trash.m in Sources */ = {isa = PBXBuildFile; fileRef = 6CB57AC7281E2AAE00E83F48 /* rm_trash.m */; };
 		729D06D8230B5E42000716E5 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 729D06D7230B5E42000716E5 /* CoreFoundation.framework */; };
 		7D0A20EA2499364700F0F6D7 /* metrics.c in Sources */ = {isa = PBXBuildFile; fileRef = 7D0A20E92499364700F0F6D7 /* metrics.c */; };
 		D12B667D25A7511B00357CFE /* cp.sh in CopyFiles */ = {isa = PBXBuildFile; fileRef = D1B421D325762E9E003E3A47 /* cp.sh */; };
@@ -1271,6 +1272,8 @@
 		3E59B9301D4A767600D3128C /* futimens.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = futimens.c; sourceTree = "<group>"; };
 		3E966CEB1FB2214F0019F7A1 /* chgrp.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = chgrp.sh; sourceTree = "<group>"; };
 		3E966CEC1FB2214F0019F7A1 /* file_cmds.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = file_cmds.plist; sourceTree = "<group>"; };
+		6CB57AC7281E2AAE00E83F48 /* rm_trash.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = rm_trash.m; sourceTree = "<group>"; };
+		6CB57AC9281E3A6D00E83F48 /* rm_trash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = rm_trash.h; sourceTree = "<group>"; };
 		729D06D7230B5E42000716E5 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		7D0A20E82499364700F0F6D7 /* metrics.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = metrics.h; sourceTree = "<group>"; };
 		7D0A20E92499364700F0F6D7 /* metrics.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = metrics.c; sourceTree = "<group>"; };
@@ -2086,6 +2089,8 @@
 				FCB1BE7414B6460C0070FACB /* rm.1 */,
 				FCB1BE7514B6460C0070FACB /* rm.c */,
 				FC8A8C4F14B650C3001B97AD /* unlink.1 */,
+				6CB57AC7281E2AAE00E83F48 /* rm_trash.m */,
+				6CB57AC9281E3A6D00E83F48 /* rm_trash.h */,
 			);
 			path = rm;
 			sourceTree = "<group>";
@@ -3085,6 +3090,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FC8A8C3914B64A7E001B97AD /* rm.c in Sources */,
+				6CB57AC8281E2AAE00E83F48 /* rm_trash.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
