@@ -125,6 +125,9 @@ struct ignentry {
 
 static int	linkchk(FTSENT *);
 static int	dirlinkchk(FTSENT *);
+#ifdef __APPLE__
+static int	clonechk(FTSENT *);
+#endif
 static void	usage(void);
 static void	prthumanval(int64_t);
 static void	ignoreadd(const char *);
@@ -152,14 +155,14 @@ main(int argc, char *argv[])
 	uint64_t	threshold, threshold_sign;
 	int		ftsoptions;
 	int		depth;
-	int		Hflag, Lflag, aflag, sflag, dflag, cflag;
+	int		Cflag, Hflag, Lflag, aflag, sflag, dflag, cflag;
 	int		lflag, ch, notused, rval;
 	char 		**save;
 	static char	dot[] = ".";
 
 	setlocale(LC_ALL, "");
 
-	Hflag = Lflag = aflag = sflag = dflag = cflag = lflag = hflag = Aflag = 0;
+	Cflag = Hflag = Lflag = aflag = sflag = dflag = cflag = lflag = hflag = Aflag = 0;
 
 	save = argv;
 	ftsoptions = FTS_PHYSICAL;
@@ -175,11 +178,14 @@ main(int argc, char *argv[])
 	depth = INT_MAX;
 	SLIST_INIT(&ignores);
 
-	while ((ch = getopt_long(argc, argv, "+AB:HI:LPasd:cghklmnrt:x",
+	while ((ch = getopt_long(argc, argv, "+ACB:HI:LPasd:cghklmnrt:x",
 	    long_options, NULL)) != -1)
 		switch (ch) {
 		case 'A':
 			Aflag = 1;
+			break;
+		case 'C':
+			Cflag = 1;
 			break;
 		case 'B':
 			errno = 0;
@@ -389,6 +395,11 @@ main(int argc, char *argv[])
 			if (lflag == 0 && p->fts_statp->st_nlink > 1 &&
 			    linkchk(p))
 				break;
+
+			#ifdef __APPLE__
+			if (Cflag == 0 && clonechk(p))
+				break;
+			#endif
 
 			curblocks = Aflag ?
 			    howmany(p->fts_statp->st_size, cblocksize) :
@@ -705,6 +716,112 @@ dirlinkchk(FTSENT *p)
 	buckets[hash] = le;
 	return (0);
 }
+
+#if __APPLE__
+static int
+clonechk(FTSENT *p)
+{
+	struct links_entry {
+		struct links_entry *next;
+		struct links_entry *previous;
+		uint64_t cloneid;
+		dev_t	 dev;
+	};
+	static const size_t links_hash_initial_size = 8192;
+	static struct links_entry **buckets;
+	static size_t number_buckets;
+	static unsigned long number_entries;
+	static char stop_allocating;
+	struct links_entry *le, **new_buckets;
+	struct stat *st;
+	uint64_t cloneid;
+	size_t i, new_size;
+	int hash;
+	struct attrbuf {
+		int size;
+		uint64_t value;
+	} __attribute((aligned(4), packed)) buf;
+	struct attrlist attrList;
+
+	memset(&attrList, 0, sizeof(attrList));
+	attrList.bitmapcount = ATTR_BIT_MAP_COUNT;
+	attrList.forkattr = ATTR_CMNEXT_CLONEID;
+	if (-1 == getattrlist(p->fts_path, &attrList, &buf, sizeof(buf), FSOPT_ATTR_CMN_EXTENDED))
+		return 0;
+	cloneid = buf.value;
+	st = p->fts_statp;
+
+	/* If necessary, initialize the hash table. */
+	if (buckets == NULL) {
+		number_buckets = links_hash_initial_size;
+		buckets = malloc(number_buckets * sizeof(buckets[0]));
+		if (buckets == NULL)
+			errx(1, "No memory for clone detection");
+		for (i = 0; i < number_buckets; i++)
+			buckets[i] = NULL;
+	}
+
+	/* If the hash table is getting too full, enlarge it. */
+	if (number_entries > number_buckets * 10 && !stop_allocating) {
+		new_size = number_buckets * 2;
+		new_buckets = calloc(new_size, sizeof(struct links_entry *));
+
+		if (new_buckets == NULL) {
+			stop_allocating = 1;
+			warnx("No more memory for tracking clones");
+		} else {
+			for (i = 0; i < number_buckets; i++) {
+				while (buckets[i] != NULL) {
+					/* Remove entry from old bucket. */
+					le = buckets[i];
+					buckets[i] = le->next;
+
+					/* Add entry to new bucket. */
+					hash = (le->dev ^ le->cloneid) % new_size;
+
+					if (new_buckets[hash] != NULL)
+						new_buckets[hash]->previous =
+						    le;
+					le->next = new_buckets[hash];
+					le->previous = NULL;
+					new_buckets[hash] = le;
+				}
+			}
+			free(buckets);
+			buckets = new_buckets;
+			number_buckets = new_size;
+		}
+	}
+
+	/* Try to locate this entry in the hash table. */
+	hash = ( st->st_dev ^ cloneid ) % number_buckets;
+	for (le = buckets[hash]; le != NULL; le = le->next) {
+		if (le->dev == st->st_dev && le->cloneid == cloneid) {
+			return (1);
+		}
+	}
+
+	if (stop_allocating)
+		return (0);
+
+	/* Add this entry to the clone ids cache. */
+	le = malloc(sizeof(struct links_entry));
+	if (le == NULL) {
+		stop_allocating = 1;
+		warnx("No more memory for tracking clones");
+		return (0);
+	}
+	le->dev = st->st_dev;
+	le->cloneid = cloneid;
+	number_entries++;
+	le->next = buckets[hash];
+	le->previous = NULL;
+	if (buckets[hash] != NULL)
+		buckets[hash]->previous = le;
+	buckets[hash] = le;
+	return (0);
+}
+#endif
 
 static void
 prthumanval(int64_t bytes)
