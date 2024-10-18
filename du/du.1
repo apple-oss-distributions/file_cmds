@@ -36,7 +36,7 @@
 .Nd display disk usage statistics
 .Sh SYNOPSIS
 .Nm
-.Op Fl Aclnx
+.Op Fl ACclnx
 .Op Fl H | L | P
 .Op Fl g | h | k | m
 .Op Fl a | s | d Ar depth
@@ -77,6 +77,15 @@ Unless in
 mode,
 .Ar blocksize
 is rounded up to the next multiple of 512.
+.It Fl C
+If a file uses data that has been cloned, count the clone's size multiple
+times. The default behavior of
+.Nm
+is to count clones once.
+When the
+.Fl C
+option is specified, the clone checks are disabled, and this data is
+counted (and displayed) as many times as they are found.
 .It Fl H
 Symbolic links on the command line are followed, symbolic links in file
 hierarchies are not followed.
