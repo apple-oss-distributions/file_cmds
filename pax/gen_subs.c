@@ -33,14 +33,6 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-#if 0
-static char sccsid[] = "@(#)gen_subs.c	8.1 (Berkeley) 5/31/93";
-#endif
-#endif /* not lint */
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD$");
-
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -275,12 +267,8 @@ safe_print(const char *str, FILE *fp)
 		 * The size of visbuf must be four times the number
 		 * of bytes encoded from str (plus one for the NUL).
 		 */
-#ifdef __APPLE__
-		size_t visbufsz = 4 * strlen(str) + 1;
-		char *visbuf = malloc(visbufsz);
-#else
-		char *visbuf = malloc(4 * strlen(str) + 1);
-#endif
+		size_t visbuflen = 4 * strlen(str) + 1;
+		char *visbuf = malloc(visbuflen);
 		if (visbuf == NULL) {
 			paxwarn(1, "Out of memory");
 			return;
@@ -289,15 +277,7 @@ safe_print(const char *str, FILE *fp)
 		 * using strvis(3) instead of vis(3) to account for multibyte
 		 * characters
 		 */
-#ifdef __APPLE__
-		if (strnvis(visbuf, visbufsz, str, VIS_CSTYLE) == -1) {
-			paxwarn(1, "Visual encoding failed");
-			free(visbuf);
-			return;
-		}
-#else
-		(void)strvis(visbuf, str, VIS_CSTYLE);
-#endif
+		(void)strnvis(visbuf, visbuflen, str, VIS_CSTYLE);
 		(void)fputs(visbuf, fp);
 		free(visbuf);
 	} else {
