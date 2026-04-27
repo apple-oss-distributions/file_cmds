@@ -35,6 +35,22 @@ require_sparse_file_support()
 	fi
 }
 
+#ifdef __APPLE__
+require_clonefile_support()
+{
+	local mountpoint="$(df -P "$(pwd)" | awk 'NR==2 {print $NF}')"
+	local personality="$(diskutil info "$mountpoint" | \
+		grep "File System Personality:" | \
+		awk '{print $NF}')"
+
+	if [ "$personality" != "APFS" ]  ; then
+		mount
+		atf_skip "Test's work directory does not support clonefile(2);" \
+			"try with a different TMPDIR?"
+	fi
+}
+#endif
+
 atf_test_case A_flag
 A_flag_head()
 {
@@ -52,6 +68,23 @@ A_flag_body()
 #endif
 	atf_check -o inline:'10\tsparse.file\n' du -A -g sparse.file
 }
+
+#ifdef __APPLE__
+atf_test_case C_flag
+C_flag_head()
+{
+	atf_set "descr" "Verify -C behavior"
+}
+C_flag_body()
+{
+	require_clonefile_support
+	atf_check truncate -s 1500000 A
+	atf_check cp -c A B
+
+	atf_check -o inline:'1.4M\tA\n1.4M\tB\n' du -C A B
+	atf_check -o inline:'1.4M\tA\n' du A B
+}
+#endif
 
 atf_test_case H_flag
 H_flag_head()
@@ -184,6 +217,7 @@ si_flag_body()
 atf_init_test_cases()
 {
 	atf_add_test_case A_flag
+	atf_add_test_case C_flag
 	atf_add_test_case H_flag
 	atf_add_test_case I_flag
 	atf_add_test_case g_flag
